@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CargoWise – Logistics Optimizer</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Exo+2:wght@300;400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#060e1c; --bg2:#0b1828; --bg3:#0f2040;
+  --accent:#00d4ff; --green:#00ff9d; --orange:#ff6b35; --purple:#9966ff; --yellow:#ffd060;
+  --white:#e8f0ff; --gray:#6a85aa; --gray2:#a8bcd8;
+  --border:rgba(0,212,255,0.14); --gborder:rgba(0,255,157,0.13);
+  --card:rgba(11,24,40,0.95); --sh:0 8px 40px rgba(0,0,0,0.6);
+  --fh:'Rajdhani',sans-serif; --fb:'Exo 2',sans-serif; --fm:'Share Tech Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--bg);color:var(--white);font-family:var(--fb);
+  min-height:100vh;overflow-x:hidden;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -10%,rgba(0,100,200,0.2) 0%,transparent 65%),
+    radial-gradient(ellipse 50% 40% at 90% 80%,rgba(0,200,100,0.06) 0%,transparent 60%);
+}
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:linear-gradient(rgba(0,212,255,0.025) 1px,transparent 1px),
+             linear-gradient(90deg,rgba(0,212,255,0.025) 1px,transparent 1px);
+  background-size:52px 52px;
+}
+
+/* ── HEADER ── */
+header{
+  position:relative;z-index:5;text-align:center;
+  padding:38px 20px 28px;border-bottom:1px solid var(--border);
+  background:linear-gradient(180deg,rgba(0,212,255,0.04),transparent);
+}
+.logo-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.25);
+  font-family:var(--fm);font-size:9px;letter-spacing:3px;color:var(--accent);
+  padding:4px 14px;border-radius:2px;margin-bottom:12px;text-transform:uppercase;
+}
+header h1{
+  font-family:var(--fh);font-size:clamp(2.2rem,5vw,3.8rem);
+  font-weight:700;letter-spacing:4px;text-transform:uppercase;line-height:1;
+  background:linear-gradient(120deg,#fff 0%,var(--accent) 45%,var(--green) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.tagline{color:var(--gray2);font-size:.9rem;margin-top:8px;letter-spacing:1px;font-weight:300;}
+.hbar{display:flex;justify-content:center;gap:0;margin-top:22px;border:1px solid var(--border);border-radius:6px;overflow:hidden;max-width:600px;margin-left:auto;margin-right:auto;}
+.hbar-item{flex:1;padding:10px 8px;text-align:center;border-right:1px solid var(--border);}
+.hbar-item:last-child{border-right:none;}
+.hbar-v{font-family:var(--fh);font-size:1.4rem;font-weight:700;color:var(--accent);}
+.hbar-l{font-family:var(--fm);font-size:.58rem;color:var(--gray);letter-spacing:2px;text-transform:uppercase;margin-top:1px;}
+
+/* ── MAIN WRAPPER ── */
+.page{max-width:1500px;margin:0 auto;padding:24px 20px 60px;position:relative;z-index:1;}
+
+/* ── THE BIG UNIFIED LAYOUT ── */
+/* Top row: 3 columns — graph setup | graph canvas | packages */
+.top-row{display:grid;grid-template-columns:320px 1fr 300px;gap:16px;align-items:start;}
+@media(max-width:1100px){.top-row{grid-template-columns:1fr 1fr;}}
+@media(max-width:700px){.top-row{grid-template-columns:1fr;}}
+
+/* Bottom row: full-width results */
+.result-row{margin-top:16px;}
+
+/* ── CARDS ── */
+.card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:10px;padding:20px;box-shadow:var(--sh);
+  backdrop-filter:blur(16px);
+}
+.card.green-card{border-color:var(--gborder);}
+.ctitle{
+  font-family:var(--fh);font-size:1.1rem;font-weight:700;
+  letter-spacing:2px;text-transform:uppercase;
+  color:var(--white);
+  display:flex;align-items:center;gap:8px;margin-bottom:14px;
+}
+.ctitle::before{content:'';display:block;width:3px;height:20px;border-radius:2px;background:linear-gradient(180deg,var(--accent),var(--green));}
+.ctitle.g::before{background:linear-gradient(180deg,var(--green),#00ccff);}
+.ctitle .pill{
+  font-family:var(--fm);font-size:.56rem;letter-spacing:2px;
+  color:var(--accent);border:1px solid rgba(0,212,255,0.3);
+  padding:1px 6px;border-radius:2px;margin-left:auto;text-transform:uppercase;
+}
+.ctitle.g .pill{color:var(--green);border-color:rgba(0,255,157,0.3);}
+
+/* ── FORM ── */
+label{display:block;font-family:var(--fm);font-size:.62rem;color:var(--gray);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px;}
+input,select{
+  width:100%;background:rgba(6,14,28,0.8);
+  border:1px solid rgba(0,212,255,0.15);color:var(--white);
+  font-family:var(--fb);font-size:.85rem;padding:8px 11px;
+  border-radius:4px;outline:none;margin-bottom:10px;
+  transition:border-color .2s,box-shadow .2s;
+}
+input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,212,255,0.08);}
+input[type=number]{-moz-appearance:textfield;}
+input[type=number]::-webkit-inner-spin-button{opacity:.3;}
+select option{background:#0b1828;}
+
+/* ── THE BIG BUTTON ── */
+.run-btn{
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  width:100%;padding:16px;margin-top:8px;border:none;border-radius:6px;
+  font-family:var(--fh);font-size:1.2rem;font-weight:700;
+  letter-spacing:3px;text-transform:uppercase;cursor:pointer;
+  background:linear-gradient(135deg,#005faa 0%,#0099dd 50%,#00bbee 100%);
+  color:#fff;box-shadow:0 4px 28px rgba(0,160,240,0.45);
+  transition:all .25s;position:relative;overflow:hidden;
+}
+.run-btn::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent 40%,rgba(255,255,255,0.08));pointer-events:none;}
+.run-btn:hover{transform:translateY(-2px);box-shadow:0 8px 40px rgba(0,160,240,0.6);}
+.run-btn:active{transform:translateY(0);}
+
+/* ── SMALL BUTTONS ── */
+.sm-btn{
+  background:rgba(0,212,255,0.07);border:1px solid rgba(0,212,255,0.22);
+  color:var(--accent);font-family:var(--fh);font-size:.72rem;
+  font-weight:600;letter-spacing:1px;padding:6px 12px;border-radius:3px;
+  cursor:pointer;transition:all .2s;text-transform:uppercase;
+}
+.sm-btn:hover{background:rgba(0,212,255,0.15);}
+.sm-btn.g{color:var(--green);border-color:rgba(0,255,157,0.22);}
+.sm-btn.g:hover{background:rgba(0,255,157,0.1);}
+.del-btn{
+  background:rgba(255,60,60,0.07);border:1px solid rgba(255,60,60,0.18);
+  color:#ff7788;font-family:var(--fm);font-size:.7rem;
+  padding:4px 8px;border-radius:3px;cursor:pointer;transition:all .2s;
+}
+.del-btn:hover{background:rgba(255,60,60,0.16);}
+
+/* ── TABLES ── */
+.t{width:100%;border-collapse:collapse;font-size:.8rem;}
+.t th{
+  background:rgba(0,212,255,0.06);color:var(--accent);
+  font-family:var(--fm);font-size:.58rem;letter-spacing:2px;
+  text-transform:uppercase;padding:7px 8px;text-align:left;
+  border-bottom:1px solid var(--border);
+}
+.t td{padding:5px 7px;border-bottom:1px solid rgba(0,212,255,0.05);vertical-align:middle;}
+.t tr:last-child td{border-bottom:none;}
+.t input,.t select{margin-bottom:0;padding:5px 7px;font-size:.78rem;}
+
+.gt{width:100%;border-collapse:collapse;font-size:.8rem;}
+.gt th{
+  background:rgba(0,255,157,0.05);color:var(--green);
+  font-family:var(--fm);font-size:.58rem;letter-spacing:2px;
+  text-transform:uppercase;padding:7px 10px;text-align:left;
+  border-bottom:1px solid var(--gborder);
+}
+.gt td{padding:5px 9px;border-bottom:1px solid rgba(0,255,157,0.04);vertical-align:middle;}
+.gt tr:last-child td{border-bottom:none;}
+.gt input{margin-bottom:0;padding:5px 8px;font-size:.78rem;}
+.gt tr.sel{background:rgba(0,255,157,0.05);}
+
+/* ── CANVAS ── */
+#graphCanvas{
+  width:100%;display:block;border-radius:6px;
+  background:radial-gradient(ellipse at 50% 50%,rgba(0,40,100,0.4) 0%,rgba(3,8,20,0.98) 100%);
+  border:1px solid var(--border);
+}
+.chint{font-family:var(--fm);font-size:.6rem;color:var(--gray);text-align:center;margin-top:5px;letter-spacing:1px;}
+
+/* truck status */
+#truckStatus{font-family:var(--fm);font-size:.68rem;color:var(--gray);text-align:center;margin-top:8px;padding:7px 12px;background:rgba(0,0,0,0.25);border:1px solid var(--border);border-radius:4px;display:none;}
+
+/* ── RESULT ROW ── */
+.res-strip{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:14px;margin-bottom:16px;
+}
+@media(max-width:900px){.res-strip{grid-template-columns:1fr 1fr;}}
+@media(max-width:500px){.res-strip{grid-template-columns:1fr;}}
+
+.stat-card{
+  background:rgba(6,14,28,0.95);border:1px solid var(--border);
+  border-radius:8px;padding:16px;position:relative;overflow:hidden;
+}
+.stat-card::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--accent),var(--green));}
+.stat-card.c::after{background:linear-gradient(90deg,var(--orange),#ffaa00);}
+.stat-card.p::after{background:linear-gradient(90deg,var(--green),#00ddbb);}
+.stat-card.n::after{background:linear-gradient(90deg,var(--purple),#7799ff);}
+.sl{font-family:var(--fm);font-size:.58rem;color:var(--gray);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;}
+.sv{font-family:var(--fh);font-size:1.6rem;font-weight:700;color:var(--accent);line-height:1;}
+.stat-card.c .sv{color:var(--orange);}
+.stat-card.p .sv{color:var(--green);}
+.stat-card.n .sv{color:var(--purple);}
+.ss{font-size:.72rem;color:var(--gray);margin-top:4px;}
+
+/* ── BOTTOM GRID: path detail + packages detail ── */
+.bottom-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media(max-width:800px){.bottom-grid{grid-template-columns:1fr;}}
+
+/* path display */
+.path-display{
+  padding:12px 15px;border-radius:6px;
+  background:rgba(0,212,255,0.04);border:1px solid rgba(0,212,255,0.18);
+  margin-bottom:14px;
+}
+.pr{font-family:var(--fh);font-size:1.2rem;font-weight:700;color:var(--green);letter-spacing:2px;margin-bottom:3px;}
+.pc{font-family:var(--fm);font-size:.76rem;color:var(--accent);}
+
+/* DP table */
+.dp-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:5px;}
+.dp-t{border-collapse:collapse;font-family:var(--fm);font-size:.66rem;white-space:nowrap;}
+.dp-t th{background:rgba(0,212,255,0.08);color:var(--accent);padding:5px 8px;border:1px solid rgba(0,212,255,0.1);text-align:center;}
+.dp-t td{padding:4px 7px;border:1px solid rgba(0,212,255,0.06);text-align:center;color:var(--gray2);}
+.dp-t td.dh{background:rgba(0,255,157,0.14);color:var(--green);font-weight:700;}
+.dp-t td.dm{background:rgba(0,212,255,0.18);color:var(--accent);font-weight:700;}
+
+/* badges */
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-family:var(--fm);font-size:.6rem;font-weight:600;letter-spacing:1px;}
+.b-yes{background:rgba(0,255,157,0.15);color:var(--green);border:1px solid rgba(0,255,157,0.25);}
+.b-no {background:rgba(255,107,53,0.12);color:var(--orange);border:1px solid rgba(255,107,53,0.22);}
+
+/* chips */
+.chip{display:inline-flex;align-items:center;gap:4px;font-family:var(--fm);font-size:.6rem;color:var(--gray);background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);padding:2px 8px;border-radius:20px;margin:2px;}
+.dot{width:5px;height:5px;border-radius:50%;background:var(--accent);}
+.dot.g{background:var(--green);}
+
+/* divider */
+.div{height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent);margin:10px 0;}
+
+/* city row */
+.csr{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+/* algo section */
+.algo-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px;}
+@media(max-width:700px){.algo-row{grid-template-columns:1fr;}}
+.ac{background:rgba(6,14,28,0.85);border:1px solid var(--border);border-radius:8px;padding:18px;}
+.ac h3{font-family:var(--fh);font-size:1.05rem;font-weight:700;color:var(--accent);letter-spacing:1px;margin-bottom:2px;}
+.ac.g h3{color:var(--green);}
+.atype{font-family:var(--fm);font-size:.58rem;color:var(--gray);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;}
+.ac p{font-size:.79rem;color:var(--gray2);line-height:1.65;margin-bottom:8px;}
+.sl2{list-style:none;padding:0;}
+.sl2 li{display:flex;gap:8px;align-items:flex-start;font-size:.76rem;color:var(--gray2);padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.035);}
+.sl2 li:last-child{border-bottom:none;}
+.sn{font-family:var(--fm);font-size:.6rem;color:var(--accent);background:rgba(0,212,255,0.07);border:1px solid rgba(0,212,255,0.16);border-radius:50%;min-width:18px;height:18px;display:flex;align-items:center;justify-content:center;margin-top:1px;}
+.ac.g .sn{color:var(--green);background:rgba(0,255,157,0.07);border-color:rgba(0,255,157,0.16);}
+.cx{margin-top:10px;padding:8px 11px;background:rgba(0,0,0,0.35);border-radius:4px;font-family:var(--fm);font-size:.68rem;color:var(--accent);border-left:3px solid var(--accent);}
+.ac.g .cx{color:var(--green);border-left-color:var(--green);}
+
+/* footer */
+footer{position:relative;z-index:5;border-top:1px solid var(--border);padding:28px 20px;text-align:center;background:linear-gradient(0deg,rgba(0,212,255,0.03),transparent);}
+.flogo{font-family:var(--fh);font-size:1.2rem;font-weight:700;letter-spacing:3px;background:linear-gradient(135deg,var(--accent),var(--green));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;text-transform:uppercase;margin-bottom:10px;}
+.finfo{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 24px;font-size:.74rem;color:var(--gray);}
+.finfo span{display:flex;align-items:center;gap:4px;}
+.finfo strong{color:var(--gray2);}
+.fdot{color:var(--accent);}
+
+/* toast */
+#toast{position:fixed;bottom:20px;right:20px;background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.3);color:var(--accent);font-family:var(--fm);font-size:.72rem;padding:10px 18px;border-radius:4px;opacity:0;transform:translateY(10px);transition:all .3s;z-index:9999;pointer-events:none;letter-spacing:1px;max-width:90vw;}
+#toast.show{opacity:1;transform:translateY(0);}
+
+/* misc */
+.pulse{animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.45;}}
+.mt{margin-top:8px;}
+.mt14{margin-top:14px;}
+.sec-lbl{font-family:var(--fm);font-size:.58rem;color:var(--gray);letter-spacing:2px;text-transform:uppercase;margin-bottom:7px;}
+.hidden{display:none!important;}
+</style>
+</head>
+<body>
+
+<!-- ══════════ HEADER ══════════ -->
+<header>
+  <div class="logo-badge">🚚 CargoWise · Logistics Intelligence</div>
+  <h1>CargoWise</h1>
+  <p class="tagline">Route Optimization &amp; Profit Maximization — Dijkstra + 0/1 Knapsack DP</p>
+  <div class="hbar">
+    <div class="hbar-item"><div class="hbar-v">O(V²)</div><div class="hbar-l">Dijkstra</div></div>
+    <div class="hbar-item"><div class="hbar-v">O(nW)</div><div class="hbar-l">Knapsack</div></div>
+    <div class="hbar-item"><div class="hbar-v" id="hCities">0</div><div class="hbar-l">Cities</div></div>
+    <div class="hbar-item"><div class="hbar-v" id="hPkgs">0</div><div class="hbar-l">Packages</div></div>
+  </div>
+</header>
+
+<!-- ══════════ PAGE ══════════ -->
+<div class="page">
+
+  <!-- ══ TOP ROW: 3 panels side by side ══ -->
+  <div class="top-row">
+
+    <!-- ── PANEL 1: Graph Setup ── -->
+    <div class="card">
+      <div class="ctitle"><span>1</span> Network Setup <span class="pill">Dijkstra</span></div>
+
+      <label>Cities</label>
+      <input type="number" id="numCities" value="5" min="2" max="12">
+      <button class="sm-btn" onclick="genCities()" style="margin-bottom:10px">⟳ Regenerate</button>
+      <div class="div"></div>
+      <div id="cityGrid"></div>
+
+      <label>Roads</label>
+      <table class="t">
+        <thead><tr><th>From</th><th>To</th><th>Cost</th><th></th></tr></thead>
+        <tbody id="roadBody"></tbody>
+      </table>
+      <div class="mt"><button class="sm-btn" onclick="addRoad()">+ Road</button></div>
+
+      <div class="div"></div>
+      <div class="csr">
+        <div><label>Source</label><select id="src"></select></div>
+        <div><label>Destination</label><select id="dst"></select></div>
+      </div>
+    </div>
+
+    <!-- ── PANEL 2: Graph Canvas (centre) ── -->
+    <div class="card" style="display:flex;flex-direction:column;">
+      <div class="ctitle">
+        Graph Visualization
+        <div style="margin-left:auto;display:flex;gap:4px;flex-wrap:wrap;">
+          <span class="chip"><span class="dot"></span>City</span>
+          <span class="chip"><span class="dot g"></span>Shortest Path</span>
+        </div>
+      </div>
+      <canvas id="graphCanvas" style="flex:1;min-height:380px;"></canvas>
+      <div class="chint">Nodes = cities · Edges = roads · Green path = Dijkstra result · 🚚 Truck animates on graph</div>
+      <div id="truckStatus"></div>
+
+      <!-- Path result shown here, right under graph -->
+      <div id="pathBox" class="hidden" style="margin-top:10px;padding:12px 14px;background:rgba(0,212,255,0.04);border:1px solid rgba(0,212,255,0.18);border-radius:6px;">
+        <div class="pr" id="pathRoute">—</div>
+        <div class="pc" id="pathCost">—</div>
+      </div>
+    </div>
+
+    <!-- ── PANEL 3: Packages ── -->
+    <div class="card green-card">
+      <div class="ctitle g"><span>2</span> Cargo Packages <span class="pill">Knapsack</span></div>
+
+      <label>Truck Capacity (kg)</label>
+      <input type="number" id="cap" value="50" min="1">
+
+      <table class="gt">
+        <thead><tr><th>ID</th><th>kg</th><th>₹</th><th></th></tr></thead>
+        <tbody id="pkgBody"></tbody>
+      </table>
+      <div class="mt" style="text-align:right">
+        <button class="sm-btn g" onclick="addPkg()">+ Package</button>
+      </div>
+
+      <div class="div"></div>
+
+      <!-- Knapsack result shown here, inside same panel -->
+      <div id="ksBox" class="hidden">
+        <div class="sec-lbl">Knapsack Result</div>
+        <div style="font-family:var(--fh);font-size:1.5rem;font-weight:700;color:var(--green)" id="ksProfit">₹ —</div>
+        <div style="font-size:.76rem;color:var(--gray2);margin-top:4px" id="ksSel">—</div>
+        <div style="font-size:.72rem;color:var(--gray);margin-top:2px" id="ksWt">—</div>
+      </div>
+    </div>
+
+  </div><!-- /top-row -->
+
+  <!-- ══ THE ONE BUTTON — spans everything ══ -->
+  <button class="run-btn" onclick="runAll()" style="margin-top:14px;">
+    🚀 &nbsp; Optimize Route &amp; Cargo
+  </button>
+
+  <!-- ══ RESULTS ROW (hidden until run) ══ -->
+  <div class="result-row hidden" id="resultRow">
+
+    <!-- 4 stat strip -->
+    <div class="res-strip" style="margin-top:16px;">
+      <div class="stat-card">
+        <div class="sl">📍 Optimal Route</div>
+        <div class="sv" id="rRoute" style="font-size:1rem;line-height:1.3;word-break:break-all">—</div>
+        <div class="ss" id="rHops">—</div>
+      </div>
+      <div class="stat-card c">
+        <div class="sl">🛣️ Travel Cost</div>
+        <div class="sv" id="rCost">₹ —</div>
+        <div class="ss">Dijkstra shortest path</div>
+      </div>
+      <div class="stat-card p">
+        <div class="sl">📦 Max Cargo Profit</div>
+        <div class="sv" id="rProfit">₹ —</div>
+        <div class="ss" id="rPkgs">—</div>
+      </div>
+      <div class="stat-card n">
+        <div class="sl">💰 Net Profit</div>
+        <div class="sv" id="rNet">₹ —</div>
+        <div class="ss">Cargo Profit − Travel Cost</div>
+      </div>
+    </div>
+
+    <!-- Bottom: path detail + package detail side by side -->
+    <div class="bottom-grid">
+
+      <!-- Left: Dijkstra path + DP table -->
+      <div class="card">
+        <div class="ctitle" style="margin-bottom:10px">Shortest Path Detail <span class="pill">Dijkstra</span></div>
+        <div class="path-display">
+          <div class="pr" id="rPathFull">—</div>
+          <div class="pc" id="rPathCost">—</div>
+        </div>
+        <div class="sec-lbl">Knapsack DP Table</div>
+        <div class="dp-wrap" id="dpWrap">
+          <div style="text-align:center;padding:16px;font-family:var(--fm);font-size:.68rem;color:var(--gray)">Run optimization to see DP table</div>
+        </div>
+      </div>
+
+      <!-- Right: Package selection detail -->
+      <div class="card">
+        <div class="ctitle g" style="margin-bottom:10px">Package Selection <span class="pill">Knapsack</span></div>
+        <table class="gt">
+          <thead><tr><th>ID</th><th>Weight</th><th>Profit</th><th>Status</th></tr></thead>
+          <tbody id="pkgResult"></tbody>
+        </table>
+      </div>
+
+    </div>
+
+    <!-- Algorithm explanations -->
+    <div class="algo-row">
+      <div class="ac">
+        <h3>Dijkstra's Algorithm</h3>
+        <div class="atype">Greedy · Shortest Path · Graph Theory</div>
+        <p>Finds the minimum-cost route between two cities in a weighted graph by always expanding the cheapest unvisited node first.</p>
+        <ul class="sl2">
+          <li><span class="sn">1</span> Set all distances to ∞; source = 0</li>
+          <li><span class="sn">2</span> Pick unvisited node with minimum distance</li>
+          <li><span class="sn">3</span> Relax neighbours — update if shorter path found</li>
+          <li><span class="sn">4</span> Mark visited; repeat until destination reached</li>
+          <li><span class="sn">5</span> Traceback predecessor map to get full path</li>
+        </ul>
+        <div class="cx">Time: O(V²) · Space: O(V) · Optimal on non-negative weights</div>
+      </div>
+      <div class="ac g">
+        <h3>0/1 Knapsack Algorithm</h3>
+        <div class="atype">Dynamic Programming · Combinatorial Optimization</div>
+        <p>Picks the most profitable subset of packages within the truck's weight limit. Each item is fully taken or fully left.</p>
+        <ul class="sl2">
+          <li><span class="sn">1</span> Build dp[i][w] = max profit with i items, capacity w</li>
+          <li><span class="sn">2</span> If item weight &gt; w → dp[i][w] = dp[i-1][w]</li>
+          <li><span class="sn">3</span> Else → dp[i][w] = max(skip, take + dp[i-1][w-wᵢ])</li>
+          <li><span class="sn">4</span> Backtrack from dp[n][W] to find selected items</li>
+          <li><span class="sn">5</span> Item i taken when dp[i][w] ≠ dp[i-1][w]</li>
+        </ul>
+        <div class="cx">Time: O(n·W) · Space: O(n·W) · Exact solution via bottom-up DP</div>
+      </div>
+    </div>
+
+  </div><!-- /result-row -->
+
+</div><!-- /page -->
+
+<!-- FOOTER -->
+<footer>
+  <div class="flogo">CargoWise Logistics Optimizer</div>
+  <div class="finfo">
+    <span><span class="fdot">▸</span><strong>Student:</strong> Thapana Boora</span>
+    <span><span class="fdot">▸</span><strong>Course:</strong> Design and Analysis of Algorithms</span>
+    <span><span class="fdot">▸</span><strong>University:</strong> Amrita Vishwa Vidyapeetham</span>
+  </div>
+  <div style="margin-top:9px;font-family:var(--fm);font-size:.58rem;color:var(--gray);letter-spacing:2px">
+    Dijkstra Greedy + 0/1 Knapsack DP · CS Mini Project 2024
+  </div>
+</footer>
+
+<div id="toast"></div>
+
+<!-- ═══════════════════════════════════ SCRIPT ═══════════════════════════════════ -->
+<script>
+/* ── STATE ── */
+let cities   = [];
+let spath    = [];
+let scost    = 0;
+let mprofit  = 0;
+let pkgN     = 0;
+let nodePos  = [];
+
+/* ── INIT ── */
+window.addEventListener('DOMContentLoaded', () => {
+  genCities();
+  loadDefaultPkgs();
+  setTimeout(() => {
+    const preset = [[0,1,10],[0,2,20],[1,2,5],[1,3,15],[2,4,10],[3,4,8],[0,3,30]];
+    const rows   = document.querySelectorAll('#roadBody tr');
+    preset.forEach((d,i) => {
+      if (!rows[i]) return;
+      rows[i].querySelector('.rf').selectedIndex = d[0];
+      rows[i].querySelector('.rt').selectedIndex = d[1];
+      rows[i].querySelector('.rc').value         = d[2];
+    });
+    _lastRoads = getRoads();
+    drawGraph([], _lastRoads);
+  }, 120);
+});
+
+/* ── TOAST ── */
+function toast(m) {
+  const el = document.getElementById('toast');
+  el.textContent = m; el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+/* ── STATS BAR ── */
+function updateStats() {
+  document.getElementById('hCities').textContent = cities.filter(Boolean).length;
+  document.getElementById('hPkgs').textContent   = document.querySelectorAll('#pkgBody tr').length;
+}
+
+/* ── CITY GENERATION ── */
+function genCities() {
+  const n   = parseInt(document.getElementById('numCities').value) || 5;
+  const con = document.getElementById('cityGrid');
+  con.innerHTML = ''; cities = [];
+  const abc = 'ABCDEFGHIJKL'.split('');
+
+  const g = document.createElement('div');
+  g.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:6px;margin-bottom:10px;';
+
+  for (let i = 0; i < n; i++) {
+    const nm  = abc[i] || `C${i+1}`;
+    const div = document.createElement('div');
+    const lbl = document.createElement('label'); lbl.textContent = `City ${i+1}`;
+    const inp = document.createElement('input');
+    inp.type = 'text'; inp.value = nm; inp.style.marginBottom = '0';
+    inp.dataset.idx = i;
+    inp.addEventListener('input', refreshAll);
+    div.appendChild(lbl); div.appendChild(inp);
+    g.appendChild(div);
+    cities.push(nm);
+  }
+  con.appendChild(g);
+  refreshAll();
+
+  /* rebuild road rows */
+  document.getElementById('roadBody').innerHTML = '';
+  for (let i = 0; i < 4; i++) addRoad();
+  updateStats();
+}
+
+function refreshAll() {
+  cities = Array.from(document.querySelectorAll('[data-idx]'))
+    .map(el => el.value.trim() || `C${el.dataset.idx}`);
+
+  ['src','dst'].forEach(id => {
+    const sel = document.getElementById(id);
+    const old = sel.value;
+    sel.innerHTML = '';
+    cities.forEach((n,i) => sel.add(new Option(n, i)));
+    sel.value = old;
+  });
+  if (!document.getElementById('dst').value && cities.length > 1)
+    document.getElementById('dst').selectedIndex = cities.length - 1;
+
+  /* refresh road selects */
+  document.querySelectorAll('#roadBody tr').forEach(row => {
+    ['.rf','.rt'].forEach(cls => {
+      const s = row.querySelector(cls); if (!s) return;
+      const v = s.value; s.innerHTML = '';
+      cities.forEach((n,i) => s.add(new Option(n,i)));
+      s.value = v;
+    });
+  });
+  updateStats();
+}
+
+/* ── ROAD ROWS ── */
+function addRoad() {
+  const tb = document.getElementById('roadBody');
+  const tr = document.createElement('tr');
+  const fs = sel('rf'); const ts = sel('rt');
+  cities.forEach((n,i) => { fs.add(new Option(n,i)); ts.add(new Option(n,i)); });
+  if (cities.length > 1) ts.selectedIndex = 1;
+  const ci = inp('number','rc'); ci.min='1'; ci.value = rnd(5,45);
+  const db = delBtn(() => tr.remove());
+  [fs,ts,ci,db].forEach(el => { const td=document.createElement('td'); td.appendChild(el); tr.appendChild(td); });
+  tb.appendChild(tr);
+}
+
+function getRoads() {
+  const r = [];
+  document.querySelectorAll('#roadBody tr').forEach(row => {
+    const f = +row.querySelector('.rf').value;
+    const t = +row.querySelector('.rt').value;
+    const c = parseFloat(row.querySelector('.rc').value);
+    if (!isNaN(f)&&!isNaN(t)&&!isNaN(c)&&f!==t&&c>0) r.push({f,t,c});
+  });
+  return r;
+}
+
+/* ── PACKAGE ROWS ── */
+function loadDefaultPkgs() {
+  [{id:'P001',w:10,p:60},{id:'P002',w:20,p:100},{id:'P003',w:30,p:120},
+   {id:'P004',w:15,p:80},{id:'P005',w:25,p:110}].forEach(d => addPkg(d));
+}
+
+function addPkg(d={}) {
+  pkgN++;
+  const tb = document.getElementById('pkgBody');
+  const tr = document.createElement('tr');
+  const id = inp('text'); id.value = d.id || `P${String(pkgN).padStart(3,'0')}`;
+  const wi = inp('number','pw'); wi.min='1'; wi.value = d.w || rnd(5,28);
+  const pi = inp('number','pp'); pi.min='1'; pi.value = d.p || rnd(20,110);
+  const db = delBtn(() => { tr.remove(); updateStats(); });
+  [id,wi,pi,db].forEach(el => { const td=document.createElement('td'); td.appendChild(el); tr.appendChild(td); });
+  tb.appendChild(tr);
+  updateStats();
+}
+
+/* ── HELPERS ── */
+function sel(cls) { const s=document.createElement('select'); s.className=cls; s.style.marginBottom='0'; return s; }
+function inp(type, cls) {
+  const i=document.createElement('input'); i.type=type; i.style.marginBottom='0';
+  if(cls) i.className=cls; return i;
+}
+function delBtn(fn) {
+  const b=document.createElement('button'); b.className='del-btn'; b.textContent='✕'; b.onclick=fn; return b;
+}
+function rnd(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
+
+/* ══════════════════════════════════════
+   RUN ALL — single entry point
+══════════════════════════════════════ */
+function runAll() {
+  refreshAll();
+  const roads = getRoads();
+  const n     = cities.length;
+  const src   = +document.getElementById('src').value;
+  const dst   = +document.getElementById('dst').value;
+
+  if (!roads.length)   { toast('⚠ Add at least one road'); return; }
+  if (src === dst)     { toast('⚠ Source and destination are the same'); return; }
+
+  /* ── DIJKSTRA ── */
+  const adj = Array.from({length:n}, () => []);
+  roads.forEach(({f,t,c}) => { adj[f].push({v:t,c}); adj[t].push({v:f,c}); });
+
+  const dist = Array(n).fill(Infinity);
+  const prev = Array(n).fill(-1);
+  const vis  = Array(n).fill(false);
+  dist[src]  = 0;
+
+  for (let s = 0; s < n; s++) {
+    let u = -1;
+    for (let i = 0; i < n; i++) if (!vis[i] && (u < 0 || dist[i] < dist[u])) u = i;
+    if (u < 0 || dist[u] === Infinity) break;
+    vis[u] = true;
+    adj[u].forEach(({v, c}) => { if (dist[u]+c < dist[v]) { dist[v]=dist[u]+c; prev[v]=u; } });
+  }
+
+  if (dist[dst] === Infinity) { toast('⚠ No path found — check roads'); return; }
+
+  const path = []; let cur = dst;
+  while (cur >= 0) { path.unshift(cur); cur = prev[cur]; }
+  spath = path; scost = dist[dst];
+
+  /* ── KNAPSACK ── */
+  const W = parseInt(document.getElementById('cap').value);
+  if (isNaN(W) || W <= 0) { toast('⚠ Enter valid truck capacity'); return; }
+
+  const items = [];
+  document.querySelectorAll('#pkgBody tr').forEach(row => {
+    const id = row.querySelector('input[type=text]')?.value || `P${items.length+1}`;
+    const w  = parseInt(row.querySelector('.pw')?.value);
+    const p  = parseInt(row.querySelector('.pp')?.value);
+    if (!isNaN(w) && !isNaN(p) && w > 0 && p > 0) items.push({id, w, p});
+  });
+  if (!items.length) { toast('⚠ Add at least one package'); return; }
+
+  const m  = items.length;
+  const dp = Array.from({length:m+1}, () => Array(W+1).fill(0));
+  for (let i = 1; i <= m; i++) {
+    for (let w = 0; w <= W; w++) {
+      dp[i][w] = items[i-1].w > w
+        ? dp[i-1][w]
+        : Math.max(dp[i-1][w], dp[i-1][w - items[i-1].w] + items[i-1].p);
+    }
+  }
+  mprofit = dp[m][W];
+
+  /* backtrack */
+  const sel2 = new Set(); let ii=m, ww=W;
+  while (ii > 0 && ww > 0) {
+    if (dp[ii][ww] !== dp[ii-1][ww]) { sel2.add(ii-1); ww -= items[ii-1].w; }
+    ii--;
+  }
+
+  /* ══ UPDATE ALL UI TOGETHER ══ */
+  const routeStr = path.map(i => cities[i]).join(' → ');
+  const net      = mprofit - scost;
+  const selNames = [...sel2].sort().map(i => items[i].id);
+  const selWt    = [...sel2].reduce((s,i) => s+items[i].w, 0);
+
+  /* graph + truck on graph */
+  drawGraph(path, roads);
+  animateTruckOnGraph(path, roads);
+
+  /* path box (under graph) */
+  document.getElementById('pathRoute').textContent = routeStr;
+  document.getElementById('pathCost').textContent  = `Total distance: ${scost} units`;
+  document.getElementById('pathBox').classList.remove('hidden');
+
+  /* knapsack box (in package panel) */
+  document.getElementById('ksProfit').textContent = `₹ ${mprofit}`;
+  document.getElementById('ksSel').textContent    = `Selected: ${selNames.join(', ')}`;
+  document.getElementById('ksWt').textContent     = `Weight: ${selWt} kg / ${W} kg`;
+  document.getElementById('ksBox').classList.remove('hidden');
+
+  /* stat strip */
+  document.getElementById('rRoute').textContent  = routeStr;
+  document.getElementById('rHops').textContent   = `${path.length-1} hop(s) · ${path.length} cities`;
+  document.getElementById('rCost').textContent   = `₹ ${scost}`;
+  document.getElementById('rProfit').textContent = `₹ ${mprofit}`;
+  document.getElementById('rPkgs').textContent   = `${sel2.size} package(s) selected`;
+  const nEl = document.getElementById('rNet');
+  nEl.textContent = `₹ ${net}`;
+  nEl.style.color = net >= 0 ? 'var(--purple)' : 'var(--orange)';
+
+  /* full path detail */
+  document.getElementById('rPathFull').textContent = routeStr;
+  document.getElementById('rPathCost').textContent = `Total cost: ${scost} units`;
+
+  /* package result table */
+  const rb = document.getElementById('pkgResult'); rb.innerHTML = '';
+  items.forEach((item, idx) => {
+    const isSel = sel2.has(idx);
+    const tr    = document.createElement('tr');
+    if (isSel) tr.classList.add('sel');
+    tr.innerHTML = `
+      <td style="font-family:var(--fm);font-size:.74rem">${item.id}</td>
+      <td>${item.w} kg</td><td>₹ ${item.p}</td>
+      <td><span class="badge ${isSel?'b-yes':'b-no'}">${isSel?'✓ Selected':'✕ Skipped'}</span></td>`;
+    rb.appendChild(tr);
+  });
+
+  /* DP table */
+  const step = W > 20 ? Math.ceil(W/20) : 1;
+  let h = '<table class="dp-t"><thead><tr><th>Item\\Cap</th>';
+  for (let w = 0; w <= W; w += step) h += `<th>${w}</th>`;
+  h += '</tr></thead><tbody>';
+  for (let i = 0; i <= m; i++) {
+    const lbl = i === 0 ? '∅' : (items[i-1].id || `P${i}`);
+    h += `<tr><th style="text-align:left;padding:5px 9px;color:var(--gray2)">${lbl}</th>`;
+    for (let w = 0; w <= W; w += step) {
+      const v  = dp[i][w];
+      const dm = (i === m && w === W);
+      const dh = v > 0 && i > 0 && dp[i][w] > dp[i-1][w];
+      h += `<td class="${dm?'dm':dh?'dh':''}">${v}</td>`;
+    }
+    h += '</tr>';
+  }
+  h += '</tbody></table>';
+  document.getElementById('dpWrap').innerHTML = h;
+
+  /* reveal results */
+  const rr = document.getElementById('resultRow');
+  rr.classList.remove('hidden');
+  setTimeout(() => rr.scrollIntoView({behavior:'smooth', block:'start'}), 80);
+
+  toast(`✓ Route: ${scost} units | Cargo: ₹${mprofit} | Net: ₹${net}`);
+}
+
+/* ══════════════════════════════════════
+   GRAPH DRAWING
+══════════════════════════════════════ */
+function drawGraph(path, roads) {
+  const cv  = document.getElementById('graphCanvas');
+  const ctx = cv.getContext('2d');
+  const W   = cv.offsetWidth  || 600;
+  const H   = cv.offsetHeight || 400;
+  cv.width  = W; cv.height = H;
+  ctx.clearRect(0, 0, W, H);
+
+  const n = cities.length; if (!n) return;
+  nodePos = [];
+  const cx=W/2, cy=H/2, r=Math.min(W,H)*0.36;
+  for (let i = 0; i < n; i++) {
+    const a = (2*Math.PI*i/n) - Math.PI/2;
+    nodePos.push({x: cx+r*Math.cos(a), y: cy+r*Math.sin(a)});
+  }
+
+  const ps = new Set();
+  for (let i = 0; i < path.length-1; i++) {
+    ps.add(`${path[i]}-${path[i+1]}`); ps.add(`${path[i+1]}-${path[i]}`);
+  }
+
+  /* edges */
+  roads.forEach(({f,t,c}) => {
+    const p1=nodePos[f], p2=nodePos[t]; if (!p1||!p2) return;
+    const on = ps.has(`${f}-${t}`);
+    ctx.beginPath(); ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y);
+    if (on) { ctx.strokeStyle='#00ff9d'; ctx.lineWidth=3.2; ctx.shadowColor='#00ff9d'; ctx.shadowBlur=14; }
+    else    { ctx.strokeStyle='rgba(0,180,240,0.2)'; ctx.lineWidth=1.3; ctx.shadowBlur=0; }
+    ctx.stroke(); ctx.shadowBlur=0;
+    const mx=(p1.x+p2.x)/2, my=(p1.y+p2.y)/2;
+    ctx.fillStyle = on ? '#00ffcc' : 'rgba(100,140,200,0.85)';
+    ctx.font = `bold 10px 'Share Tech Mono',monospace`;
+    ctx.textAlign = 'center';
+    ctx.fillText(c, mx, my-5);
+  });
+
+  /* nodes */
+  nodePos.forEach((pos,i) => {
+    const on=path.includes(i), iS=path.length>0&&path[0]===i, iD=path.length>0&&path[path.length-1]===i;
+    const g = ctx.createRadialGradient(pos.x,pos.y,2,pos.x,pos.y,20);
+    if (iS)       { g.addColorStop(0,'#00aaff'); g.addColorStop(1,'#003388'); }
+    else if (iD)  { g.addColorStop(0,'#00ff9d'); g.addColorStop(1,'#006644'); }
+    else if (on)  { g.addColorStop(0,'#66ffcc'); g.addColorStop(1,'#004433'); }
+    else          { g.addColorStop(0,'#1a3a70'); g.addColorStop(1,'#0a1840'); }
+    if (on) {
+      ctx.beginPath(); ctx.arc(pos.x,pos.y,23,0,Math.PI*2);
+      ctx.fillStyle = iD?'rgba(0,255,157,0.12)':iS?'rgba(0,170,255,0.12)':'rgba(0,255,157,0.07)';
+      ctx.fill();
+    }
+    ctx.beginPath(); ctx.arc(pos.x,pos.y,17,0,Math.PI*2);
+    ctx.fillStyle=g; ctx.fill();
+    ctx.strokeStyle = on?(iD?'#00ff9d':'#00aaff'):'rgba(0,180,240,0.32)';
+    ctx.lineWidth=2; ctx.stroke();
+    ctx.fillStyle='#fff'; ctx.font=`bold 12px 'Rajdhani',sans-serif`;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(cities[i]||`C${i}`, pos.x, pos.y);
+  });
+}
+
+/* ══════════════════════════════════════
+   TRUCK ANIMATION — ON THE DIJKSTRA GRAPH
+   Each frame: redraw graph, then paint
+   truck on top at interpolated position.
+══════════════════════════════════════ */
+let _animId = null;
+let _lastRoads = [];
+
+function animateTruckOnGraph(path, roads) {
+  _lastRoads = roads;
+  if (_animId) cancelAnimationFrame(_animId);
+
+  const st = document.getElementById('truckStatus');
+  st.style.display = 'block';
+  st.innerHTML = '<span class="pulse">▶</span> Truck driving the shortest path…';
+  st.style.color = 'var(--gray)';
+
+  const n = path.length;
+  if (n < 2) return;
+
+  let seg = 0, prog = 0;
+  const SPEED = 0.009;
+
+  function frame() {
+    /* Redraw static graph each frame */
+    drawGraph(spath, _lastRoads);
+
+    const p1 = nodePos[path[seg]];
+    const p2 = nodePos[path[seg + 1]];
+    if (!p1 || !p2) return;
+
+    const tx    = p1.x + (p2.x - p1.x) * prog;
+    const ty    = p1.y + (p2.y - p1.y) * prog;
+    const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+
+    paintTruck(tx, ty, angle);
+
+    prog += SPEED;
+    if (prog >= 1) {
+      prog = 0; seg++;
+      if (seg >= n - 1) {
+        drawGraph(spath, _lastRoads);
+        const last = nodePos[path[n - 1]];
+        paintTruck(last.x, last.y, 0);
+        st.innerHTML = '✅ Truck arrived at destination!';
+        st.style.color = 'var(--green)';
+        return;
+      }
+    }
+    _animId = requestAnimationFrame(frame);
+  }
+  _animId = requestAnimationFrame(frame);
+}
+
+function paintTruck(tx, ty, angle) {
+  const ctx = document.getElementById('graphCanvas').getContext('2d');
+  ctx.save();
+  ctx.translate(tx, ty);
+  ctx.rotate(angle);
+
+  const tw = 50, th = 24, ox = -tw * 0.5;
+
+  /* Glow */
+  ctx.shadowColor = 'rgba(0,210,255,0.7)';
+  ctx.shadowBlur  = 22;
+
+  /* Trailer */
+  ctx.fillStyle   = '#0a2250';
+  ctx.fillRect(ox - 26, -th / 2 + 2, 26, th - 4);
+  ctx.strokeStyle = 'rgba(0,180,255,0.4)';
+  ctx.lineWidth   = 1;
+  ctx.strokeRect(ox - 26, -th / 2 + 2, 26, th - 4);
+
+  /* Cab */
+  const g = ctx.createLinearGradient(ox, -th / 2, ox + tw, th / 2);
+  g.addColorStop(0, '#1e62cc');
+  g.addColorStop(1, '#0d3a8a');
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.roundRect(ox, -th / 2, tw, th, [4, 13, 4, 4]);
+  ctx.fill();
+  ctx.shadowBlur  = 0;
+  ctx.strokeStyle = '#00d4ff';
+  ctx.lineWidth   = 1.5;
+  ctx.stroke();
+
+  /* Windshield */
+  ctx.fillStyle = 'rgba(0,225,255,0.25)';
+  ctx.beginPath();
+  ctx.roundRect(ox + tw - 23, -th / 2 + 3, 19, th - 8, 3);
+  ctx.fill();
+
+  /* Wheels */
+  [[-tw * 0.35, th / 2 - 1], [tw * 0.12, th / 2 - 1]].forEach(([wx, wy]) => {
+    ctx.beginPath();
+    ctx.arc(ox + wx + tw * 0.5, wy, 6, 0, Math.PI * 2);
+    ctx.fillStyle   = '#111'; ctx.fill();
+    ctx.strokeStyle = '#888'; ctx.lineWidth = 1.2; ctx.stroke();
+  });
+
+  /* Headlight */
+  ctx.beginPath();
+  ctx.arc(ox + tw, 0, 3.5, 0, Math.PI * 2);
+  ctx.fillStyle   = '#ffff88';
+  ctx.shadowColor = 'rgba(255,255,100,0.9)';
+  ctx.shadowBlur  = 10;
+  ctx.fill();
+  ctx.shadowBlur  = 0;
+
+  /* Speed streaks */
+  for (let i = 0; i < 3; i++) {
+    ctx.beginPath();
+    ctx.moveTo(ox - 34 - i * 9, -th * 0.18 + i * 4.5);
+    ctx.lineTo(ox - 25 - i * 9, -th * 0.18 + i * 4.5);
+    ctx.strokeStyle = `rgba(0,180,255,${0.42 - i * 0.12})`;
+    ctx.lineWidth   = 1.1;
+    ctx.stroke();
+  }
+
+  ctx.restore();
+}
+
+window.addEventListener('resize', () => {
+  if (_animId) { cancelAnimationFrame(_animId); _animId = null; }
+  drawGraph(spath, _lastRoads);
+});
+</script>
+</body>
+</html>
